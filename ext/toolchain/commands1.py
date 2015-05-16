@@ -1140,14 +1140,30 @@ class InternalCommands:
 		targetIcons = "%s/icons" % targetShare
 		targetDocs = "%s/doc/%s" % (targetShare, self.project)
 
+		targetShareSynergyPlugins = '%s/%s/usr/lib/synergy/plugins' % (debDir, package)
+
 		os.makedirs(targetBin)
 		os.makedirs(targetApplications)
 		os.makedirs(targetIcons)
 		os.makedirs(targetDocs)
+
+		os.makedirs(targetShareSynergyPlugins)
 		
 		for root, dirs, files in os.walk(debDir):
 			for d in dirs:
 				os.chmod(os.path.join(root, d), 0o0755)
+
+		shutil.copy("%s/plugins/libns.so" % binDir, targetShareSynergyPlugins)
+		shutil.copy("%s/synergy.sh" % resDir, targetBin)
+
+		target = "%s/synergy.sh" % (targetBin)
+		os.chmod(target, 0o0755)
+
+		target = "%s/libns.so" % (targetShareSynergyPlugins)
+		err = os.system("strip " + target)
+		if err != 0:
+			raise Exception('strip failed: ' + str(err))
+		os.chmod(target, 0o0644)
 
 		binFiles = ['synergy', 'synergyc', 'synergys', 'synergyd', 'syntool']
 		for f in binFiles:
